@@ -27,7 +27,7 @@ struct OnboardingView: View {
         OnboardingStep(
             icon: "mic.fill",
             title: "Microphone Access",
-            description: "Required to capture your voice when you hold the Fn key. Audio is processed entirely on-device and never sent anywhere.",
+            description: "Required to capture your voice for transcription. Audio is processed entirely on-device and never sent anywhere.",
             permissionKey: "microphone"
         ),
         OnboardingStep(
@@ -45,7 +45,7 @@ struct OnboardingView: View {
         OnboardingStep(
             icon: "keyboard",
             title: "Input Monitoring",
-            description: "Required to detect when you press and release the Fn key to start/stop recording. Click + in System Settings, select VoiceScribe from Applications, and toggle it on. This will restart the app.",
+            description: "Required to detect when you press and release the trigger key to start/stop recording. Click + in System Settings, select VoiceScribe from Applications, and toggle it on. This will restart the app.",
             permissionKey: "inputMonitoring"
         )
     ]
@@ -120,7 +120,7 @@ struct OnboardingView: View {
             // Fn key usage instruction
             VStack(spacing: 12) {
                 HStack(spacing: 16) {
-                    Text("fn")
+                    Text(appState.triggerKey.keyLabel)
                         .font(.system(size: 18, weight: .medium, design: .rounded))
                         .frame(width: 44, height: 44)
                         .background(
@@ -133,7 +133,7 @@ struct OnboardingView: View {
                         )
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Hold Fn key to record")
+                        Text("Hold \(appState.triggerKey.displayName) to record")
                             .font(.headline)
                         Text("Release to transcribe into any app")
                             .font(.subheadline)

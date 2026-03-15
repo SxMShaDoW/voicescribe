@@ -212,29 +212,47 @@ struct SettingsView: View {
 
     @ViewBuilder
     private var fnKeySection: some View {
-        HStack(spacing: 16) {
-            Text("fn")
-                .font(.system(size: 14, weight: .medium, design: .rounded))
-                .frame(width: 32, height: 32)
-                .background(
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(Color.gray.opacity(0.2))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(Color.gray.opacity(0.4), lineWidth: 1)
-                )
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Trigger Key")
+                .font(.headline)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Hold Fn key to record")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                Text("Release to transcribe into any app")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+            HStack(spacing: 16) {
+                Text(appState.triggerKey.keyLabel)
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .frame(width: 32, height: 32)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color.gray.opacity(0.2))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(Color.gray.opacity(0.4), lineWidth: 1)
+                    )
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Hold \(appState.triggerKey.displayName) to record")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    Text("Release to transcribe into any app")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    if appState.triggerKey == .spacebar {
+                        Text("Quick taps still type a normal space")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                Spacer()
+
+                Picker("", selection: $appState.triggerKey) {
+                    ForEach(TriggerKey.allCases, id: \.self) { key in
+                        Text(key.displayName).tag(key)
+                    }
+                }
+                .labelsHidden()
+                .frame(width: 110)
             }
-
-            Spacer()
         }
     }
 }

@@ -114,9 +114,9 @@ struct MenuBarView: View {
         }
         switch appState.state {
         case .idle:
-            return "Hold Fn key to record"
+            return "Hold \(appState.triggerKey.displayName) to record"
         case .recording:
-            return "Release Fn to stop"
+            return "Release \(appState.triggerKey.displayName) to stop"
         case .processing:
             return "Transcribing audio..."
         case .error(let message):

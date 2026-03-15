@@ -12,18 +12,25 @@ final class AppState: ObservableObject {
     @Published var audioLevel: Float = 0
     @Published var showOnboarding = false
     @Published var hasShownSettingsOnLaunch = false
+    @Published var triggerKey: TriggerKey = .saved {
+        didSet {
+            triggerKey.save()
+            restartMonitoring()
+        }
+    }
 
     let permissionManager = PermissionManager()
     let transcriptionEngine = TranscriptionEngine()
 
     private var fnKeyMonitor: FnKeyMonitor?
+    private var spacebarMonitor: SpacebarMonitor?
     private let audioRecorder = AudioRecorder()
     private let textInserter = TextInserter()
 
     private var audioLevelTimer: Timer?
 
     init() {
-        setupFnKeyMonitor()
+        setupMonitor()
     }
 
     func initialize() async {
@@ -61,26 +68,54 @@ final class AppState: ObservableObject {
     }
 
     func startMonitoring() {
-        guard let monitor = fnKeyMonitor else { return }
-        let success = monitor.start()
-        if !success {
-            state = .error("Failed to start Fn key monitoring. Check Input Monitoring permission.")
+        switch triggerKey {
+        case .fn:
+            guard let monitor = fnKeyMonitor else { return }
+            let success = monitor.start()
+            if !success {
+                state = .error("Failed to start Fn key monitoring. Check Input Monitoring permission.")
+            }
+        case .spacebar:
+            guard let monitor = spacebarMonitor else { return }
+            let success = monitor.start()
+            if !success {
+                state = .error("Failed to start spacebar monitoring. Check Accessibility permission.")
+            }
         }
     }
 
     func stopMonitoring() {
         fnKeyMonitor?.stop()
+        spacebarMonitor?.stop()
     }
 
-    private func setupFnKeyMonitor() {
-        fnKeyMonitor = FnKeyMonitor { [weak self] pressed in
-            Task { @MainActor [weak self] in
-                self?.handleFnKeyStateChange(pressed: pressed)
-            }
+    private func restartMonitoring() {
+        stopMonitoring()
+        setupMonitor()
+        // Only start if we're past onboarding and model is loaded
+        if !showOnboarding && transcriptionEngine.isModelLoaded {
+            startMonitoring()
         }
     }
 
-    private func handleFnKeyStateChange(pressed: Bool) {
+    private func setupMonitor() {
+        let callback: (Bool) -> Void = { [weak self] pressed in
+            Task { @MainActor [weak self] in
+                self?.handleKeyStateChange(pressed: pressed)
+            }
+        }
+
+        switch triggerKey {
+        case .fn:
+            spacebarMonitor = nil
+            fnKeyMonitor = FnKeyMonitor(onFnKeyStateChanged: callback)
+        case .spacebar:
+            fnKeyMonitor = nil
+            spacebarMonitor = SpacebarMonitor(onKeyStateChanged: callback)
+        }
+    }
+
+    private func handleKeyStateChange(pressed: Bool) {
         if pressed {
             startRecording()
         } else if case .recording = state {
